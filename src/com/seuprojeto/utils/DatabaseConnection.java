@@ -5,21 +5,21 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DatabaseConnection {
+    private static final String URL = "jdbc:mysql://localhost:3306/meudb";
+    private static final String USER = "root"; // Substitua pelo seu usuário
+    private static final String PASSWORD = "root"; // Substitua pela sua senha
 
-    // Configurações da conexão com o banco de dados
-    private static final String URL = "jdbc:mysql://localhost:3306/meuDB"; // Altere para o seu banco de dados
-    private static final String USER = "root"; // Altere para o seu usuário do MySQL
-    private static final String PASSWORD = "root"; // Altere para a sua senha
-
-    // Método para obter uma conexão com o banco de dados
-    public static Connection getConnection() throws SQLException {
+    public static Connection getConnection() {
+        Connection connection = null;
         try {
-            // Registrar o driver MySQL
             Class.forName("com.mysql.cj.jdbc.Driver");
+            connection = DriverManager.getConnection(URL, USER, PASSWORD);
         } catch (ClassNotFoundException e) {
-            throw new SQLException("Driver MySQL não encontrado", e);
+            System.err.println("Driver JDBC não encontrado.");
+        } catch (SQLException e) {
+            System.err.println("Erro ao conectar: " + e.getMessage());
         }
-        // Retorna uma conexão ao banco de dados
-        return DriverManager.getConnection(URL, USER, PASSWORD);
+        return connection;
     }
+
 }

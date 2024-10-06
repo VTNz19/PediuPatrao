@@ -1,43 +1,88 @@
 package com.seuprojeto.dao;
 
 import com.seuprojeto.model.Aluno;
-
+import com.seuprojeto.utils.DatabaseConnection; 
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class AlunoDAO {
-    private List<Aluno> alunos = new ArrayList<>(); // Usando uma lista em memória para fins de exemplo
+    private Connection connection;
+
+    public AlunoDAO() {
+        connection = DatabaseConnection.getConnection();
+		if (connection == null) {
+		    System.err.println("Falha ao conectar ao banco de dados.");
+		}
+    }
 
     public void inserirAluno(Aluno aluno) {
-        alunos.add(aluno); // Adiciona o aluno à lista
+        String sql = "INSERT INTO alunos (nome, email, curso, anoDeIngresso) VALUES (?, ?, ?, ?)";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, aluno.getNome());
+            stmt.setString(2, aluno.getEmail());
+            stmt.setString(3, aluno.getCurso());
+            stmt.setInt(4, aluno.getAnoDeIngresso());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace(); // Imprime o erro para os logs
+            throw new RuntimeException("Erro ao inserir aluno: " + e.getMessage(), e);
+        }
     }
 
     public List<Aluno> listarAlunos() {
-        return alunos; // Retorna a lista de alunos
-    }
-
-    public Aluno buscarAluno(String id) {
-        // Aqui você deve implementar a lógica para buscar um aluno pela ID
-        for (Aluno aluno : alunos) {
-            if (aluno.getId().equals(id)) { // Supondo que Aluno tem um método getId()
-                return aluno;
+        List<Aluno> alunos = new ArrayList<>();
+        String sql = "SELECT * FROM alunos";
+        try (PreparedStatement stmt = connection.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                Aluno aluno = new Aluno(rs.getInt("id"), rs.getString("nome"), rs.getString("email"),
+                                        rs.getString("curso"), rs.getInt("anoDeIngresso"));
+                alunos.add(aluno);
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-        return null; // Retorna null se não encontrar
+        return alunos;
     }
 
-    public void excluirAluno(String id) {
-        // Aqui você deve implementar a lógica para excluir um aluno pela ID
-        alunos.removeIf(aluno -> aluno.getId().equals(id)); // Remove o aluno se a ID coincidir
+    public Aluno buscarAluno(int id) {
+        String sql = "SELECT * FROM alunos WHERE id = ?";
+        Aluno aluno = null;
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                aluno = new Aluno(rs.getInt("id"), rs.getString("nome"), rs.getString("email"),
+                                  rs.getString("curso"), rs.getInt("anoDeIngresso"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return aluno;
+    }
+
+    public void excluirAluno(int id) {
+        String sql = "DELETE FROM alunos WHERE id = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     public void atualizarAluno(Aluno aluno) {
-        // Aqui você deve implementar a lógica para atualizar um aluno
-        for (int i = 0; i < alunos.size(); i++) {
-            if (alunos.get(i).getId().equals(aluno.getId())) {
-                alunos.set(i, aluno); // Atualiza o aluno na lista
-                break;
-            }
+        String sql = "UPDATE alunos SET nome = ?, email = ?, curso = ?, anoDeIngresso = ? WHERE id = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, aluno.getNome());
+            stmt.setString(2, aluno.getEmail());
+            stmt.setString(3, aluno.getCurso());
+            stmt.setInt(4, aluno.getAnoDeIngresso());
+            stmt.setInt(5, aluno.getId());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 }

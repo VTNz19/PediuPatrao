@@ -1,28 +1,55 @@
 package com.seuprojeto.servlet;
 
+import com.seuprojeto.dao.AlunoDAO;
 import com.seuprojeto.model.Aluno;
-import com.seuprojeto.service.AlunoService;
 
+import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-@WebServlet("/aluno/adicionar")
 public class AlunoAddServlet extends HttpServlet {
-	 private static final long serialVersionUID = 1L;
-    private AlunoService alunoService = new AlunoService();
+    private static final long serialVersionUID = 1L;
 
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        RequestDispatcher dispatcher = request.getRequestDispatcher("/jsp/adicionarAluno.jsp");
+        dispatcher.forward(request, response);
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         String nome = request.getParameter("nome");
         String email = request.getParameter("email");
         String curso = request.getParameter("curso");
-        int anoDeIngresso = Integer.parseInt(request.getParameter("anoDeIngresso"));
 
-        Aluno aluno = new Aluno(null, nome, email, curso, anoDeIngresso);
-        alunoService.adicionarAluno(aluno);
-        response.sendRedirect("listarAlunos.jsp");
+        int anoDeIngresso;
+        try {
+            anoDeIngresso = Integer.parseInt(request.getParameter("anoDeIngresso"));
+        } catch (NumberFormatException e) {
+            request.setAttribute("errorMessage", "Ano de ingresso inválido.");
+            RequestDispatcher dispatcher = request.getRequestDispatcher("/jsp/adicionarAluno.jsp");
+            dispatcher.forward(request, response);
+            return;
+        }
+
+        Aluno aluno = new Aluno(0, nome, email, curso, anoDeIngresso);
+        AlunoDAO alunoDAO = new AlunoDAO();
+
+        try {
+            alunoDAO.inserirAluno(aluno);
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("errorMessage", "Erro ao adicionar aluno.");
+            RequestDispatcher dispatcher = request.getRequestDispatcher("/jsp/adicionarAluno.jsp");
+            dispatcher.forward(request, response);
+            return;
+        }
+
+        response.sendRedirect(request.getContextPath() + "/aluno/listar");
     }
 }

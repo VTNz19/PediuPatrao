@@ -5,6 +5,28 @@
     <meta charset="UTF-8">
     <title>Adicionar Aluno</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-image: url('${pageContext.request.contextPath}/images/gestao.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            height: 100vh;
+            color: white;
+        }
+        .container {
+            background-color: rgba(0, 0, 0, 0.7); /* Fundo semitransparente para destacar o conteúdo */
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 600px;
+            margin: auto;
+            margin-top: 50px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+    </style>
     <script>
         function validateForm() {
             const nome = document.forms[0]["nome"].value;
@@ -33,24 +55,41 @@
     </script>
 </head>
 <body>
-    <h1>Adicionar Aluno</h1>
-    <form action="${pageContext.request.contextPath}/aluno" method="post" onsubmit="return validateForm();">
-    <label for="nome">Nome:</label>
-    <input type="text" id="nome" name="nome" required>
-    
-    <label for="email">Email:</label>
-    <input type="email" id="email" name="email" required>
-    
-    <label for="curso">Curso:</label>
-    <input type="text" id="curso" name="curso" required>
-    
-    <label for="anoDeIngresso">Ano de Ingresso:</label>
-    <input type="number" id="anoDeIngresso" name="anoDeIngresso" required>
-    
-    <input type="submit" value="Adicionar Aluno">
-</form>
-    
-    
-    <a href="listarAlunos.jsp" class="btn btn-secondary">Voltar para a lista de alunos</a>
+    <div class="container">
+        <h1>Adicionar Aluno</h1>
+
+        <c:if test="${not empty errorMessage}">
+            <div class="alert alert-danger" role="alert">
+                ${errorMessage}
+            </div>
+        </c:if>
+
+        <form action="${pageContext.request.contextPath}/aluno/adicionar" method="post" onsubmit="return validateForm();">
+            <div class="form-group">
+                <label for="nome">Nome:</label>
+                <input type="text" class="form-control" id="nome" name="nome" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" class="form-control" id="email" name="email" required>
+            </div>
+
+            <div class="form-group">
+                <label for="curso">Curso:</label>
+                <input type="text" class="form-control" id="curso" name="curso" required>
+            </div>
+
+            <div class="form-group">
+                <label for="anoDeIngresso">Ano de Ingresso:</label>
+                <input type="number" class="form-control" id="anoDeIngresso" name="anoDeIngresso" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">Adicionar Aluno</button>
+        </form>
+
+        <a href="${pageContext.request.contextPath}/jsp/listarAlunos.jsp" class="btn btn-secondary btn-block mt-3">Voltar para a lista de alunos</a>
+
+    </div>
 </body>
 </html>
