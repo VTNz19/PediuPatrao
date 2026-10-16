@@ -1,1 +1,7 @@
-/build/
+/target/
+.vscode/
+.idea/
+.github/modernize/
+customs.json
+nbactions-release-profile.xml
+*.log

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Novo Pedido</title>
+</head>
+<body>
+
+<div th:fragment="content">
+
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <a href="/pedidos" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <h2 class="fw-bold mb-0">Novo Pedido</h2>
+    </div>
+
+    <div class="alert alert-danger alert-dismissible fade show" th:if="${erro}" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <span th:text="${erro}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="card shadow-sm" style="max-width: 680px;">
+        <div class="card-body p-4">
+
+            <form th:action="@{/pedidos/salvar}" method="post" id="pedidoForm">
+
+                <div class="mb-3">
+                    <label for="clienteId" class="form-label fw-medium">
+                        <i class="bi bi-person me-1"></i>Cliente
+                    </label>
+                    <select id="clienteId" name="clienteId" class="form-select" required>
+                        <option value="" disabled selected>Selecione um cliente</option>
+                        <option th:each="cliente : ${clientes}" th:value="${cliente.id}" th:text="${cliente.nome}"></option>
+                    </select>
+                </div>
+
+                <hr class="my-3"/>
+                <p class="fw-medium mb-3"><i class="bi bi-bag me-1"></i>Itens do pedido</p>
+
+                <div id="itensContainer">
+                    <div class="row g-2 mb-2 item-row">
+                        <div class="col-7">
+                            <select name="produtoId" class="form-select" required>
+                                <option value="" disabled selected>Produto</option>
+                                <option th:each="produto : ${produtos}"
+                                        th:value="${produto.id}"
+                                        th:text="${produto.nome} + ' — R$ ' + ${#numbers.formatDecimal(produto.preco, 1, 'COMMA', 2, 'POINT')}"></option>
+                            </select>
+                        </div>
+                        <div class="col-3">
+                            <input type="number" name="quantidade" class="form-control" placeholder="Qtd" min="1" value="1" required/>
+                        </div>
+                        <div class="col-2">
+                            <button type="button" class="btn btn-outline-danger w-100 btn-remover-item">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" id="btnAdicionarItem" class="btn btn-sm btn-outline-primary mb-4">
+                    <i class="bi bi-plus-lg me-1"></i>Adicionar item
+                </button>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg me-1"></i>Registrar Pedido
+                    </button>
+                    <a href="/pedidos" class="btn btn-outline-secondary">Cancelar</a>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        document.getElementById('btnAdicionarItem').addEventListener('click', function () {
+            const container = document.getElementById('itensContainer');
+            const linha = container.querySelector('.item-row').cloneNode(true);
+            linha.querySelectorAll('select, input').forEach(campo => {
+                if (campo.tagName === 'SELECT') campo.selectedIndex = 0;
+                if (campo.tagName === 'INPUT') campo.value = 1;
+            });
+            container.appendChild(linha);
+        });
+
+        document.getElementById('itensContainer').addEventListener('click', function (event) {
+            const botao = event.target.closest('.btn-remover-item');
+            if (!botao) return;
+            const linhas = document.querySelectorAll('.item-row');
+            if (linhas.length > 1) {
+                botao.closest('.item-row').remove();
+            }
+        });
+    </script>
+
+</div>
+
+</body>
+</html>
