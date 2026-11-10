@@ -1,15 +1,258 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Home</title>
+    <title>Dashboard</title>
 </head>
 <body>
 
-<div class="container-fluid vh-100 d-flex justify-content-center align-items-center" th:fragment="content">
-    <div class="text-center">
-        <h1>Bem-vindo!!!</h1>
-        <img th:src="@{/images/logo.png}" alt="Logo" width="500" height="500">
+<div class="container-fluid" th:fragment="content">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+        <h2 class="mb-0"><i class="bi bi-speedometer2"></i> Dashboard</h2>
+        <div class="small text-muted">
+            <span id="dbStatus">Carregando…</span>
+            <div class="form-check form-switch d-inline-block ms-3 align-middle">
+                <input class="form-check-input" type="checkbox" id="dbAuto" checked>
+                <label class="form-check-label" for="dbAuto">Atualizar a cada 60s</label>
+            </div>
+        </div>
     </div>
+
+    <!-- Filtros (RF05) -->
+    <form id="dbFiltros" class="card card-body mb-3">
+        <div class="row g-2 align-items-end">
+            <div class="col-6 col-md-2">
+                <label class="form-label small mb-1" for="fDe">De</label>
+                <input type="date" id="fDe" class="form-control form-control-sm">
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label small mb-1" for="fAte">Até</label>
+                <input type="date" id="fAte" class="form-control form-control-sm">
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label small mb-1" for="fStatus">Status</label>
+                <select id="fStatus" class="form-select form-select-sm"><option value="">Todos</option></select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label small mb-1" for="fTipo">Tipo de produto</label>
+                <select id="fTipo" class="form-select form-select-sm"><option value="">Todos</option></select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label small mb-1" for="fAgrup">Agrupar vendas por</label>
+                <select id="fAgrup" class="form-select form-select-sm">
+                    <option value="dia">Dia</option><option value="semana">Semana</option><option value="mes">Mês</option>
+                </select>
+            </div>
+            <div class="col-6 col-md-2 d-flex gap-1">
+                <button type="submit" class="btn btn-primary btn-sm flex-fill">Aplicar</button>
+                <button type="button" id="fLimpar" class="btn btn-outline-secondary btn-sm">Limpar</button>
+            </div>
+        </div>
+    </form>
+
+    <div id="dbErro" class="alert alert-danger d-none"></div>
+
+    <!-- Indicadores (RF01) -->
+    <div class="row g-3 mb-3">
+        <div class="col-6 col-lg-3"><div class="card text-bg-success h-100"><div class="card-body">
+            <div class="small">Faturamento</div><div class="fs-3 fw-bold" id="kFat">—</div>
+            <div class="small" id="kVar">&nbsp;</div></div></div></div>
+        <div class="col-6 col-lg-3"><div class="card text-bg-primary h-100"><div class="card-body">
+            <div class="small">Pedidos (válidos)</div><div class="fs-3 fw-bold" id="kPed">—</div>
+            <div class="small" id="kPedSub">&nbsp;</div></div></div></div>
+        <div class="col-6 col-lg-3"><div class="card text-bg-info h-100"><div class="card-body">
+            <div class="small">Ticket médio</div><div class="fs-3 fw-bold" id="kTicket">—</div>
+            <div class="small" id="kCli">&nbsp;</div></div></div></div>
+        <div class="col-6 col-lg-3"><div class="card text-bg-warning h-100"><div class="card-body">
+            <div class="small">Em andamento</div><div class="fs-3 fw-bold" id="kAnd">—</div>
+            <div class="small" id="kCanc">&nbsp;</div></div></div></div>
+    </div>
+
+    <!-- Gráficos de vendas (RF02) e situação (RF03) -->
+    <div class="row g-3 mb-3">
+        <div class="col-lg-8"><div class="card h-100"><div class="card-header">Faturamento no período (R$)</div>
+            <div class="card-body"><canvas id="chVendas" height="110"></canvas></div></div></div>
+        <div class="col-lg-4"><div class="card h-100"><div class="card-header">Pedidos por status</div>
+            <div class="card-body"><canvas id="chStatus"></canvas></div></div></div>
+    </div>
+    <div class="row g-3 mb-3">
+        <div class="col-lg-6"><div class="card h-100"><div class="card-header">Pedidos por hora do dia</div>
+            <div class="card-body"><canvas id="chHora" height="130"></canvas></div></div></div>
+        <div class="col-lg-6"><div class="card h-100"><div class="card-header">Receita por categoria</div>
+            <div class="card-body"><canvas id="chCat" height="130"></canvas></div></div></div>
+    </div>
+
+    <!-- Ranking (RF04) e últimos pedidos -->
+    <div class="row g-3 mb-4">
+        <div class="col-lg-6"><div class="card h-100"><div class="card-header">Produtos mais vendidos</div>
+            <div class="table-responsive"><table class="table table-sm mb-0">
+                <thead><tr><th>#</th><th>Produto</th><th>Tipo</th><th class="text-end">Qtd</th><th class="text-end">Receita</th></tr></thead>
+                <tbody id="tbRank"></tbody></table></div></div></div>
+        <div class="col-lg-6"><div class="card h-100"><div class="card-header">Últimos pedidos</div>
+            <div class="table-responsive"><table class="table table-sm mb-0">
+                <thead><tr><th>Cliente</th><th>Status</th><th class="text-end">Total</th><th>Entrada</th></tr></thead>
+                <tbody id="tbRec"></tbody></table></div></div></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script>
+    (function () {
+        const API = '/api/dashboard';
+        const brl = v => (v ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        const $ = id => document.getElementById(id);
+        const NOMES = { RECEBIDO: 'Recebido', EM_PREPARACAO: 'Em preparação', PRONTO: 'Pronto',
+                        SAIU_PARA_ENTREGA_RETIRADO: 'Saiu p/ entrega', FINALIZADO: 'Finalizado', CANCELADO: 'Cancelado' };
+        const CORES = ['#0d6efd', '#ffc107', '#0dcaf0', '#6f42c1', '#198754', '#dc3545'];
+        const charts = {};
+        let timer = null, carregando = false;
+
+        function esc(s) {
+            return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        function iso(d) { return d.toLocaleDateString('sv-SE'); } // yyyy-MM-dd no fuso local
+        function periodoPadrao() {
+            const ate = new Date(), de = new Date();
+            de.setDate(de.getDate() - 29);
+            $('fDe').value = iso(de); $('fAte').value = iso(ate);
+        }
+
+        function qs(extra) {
+            const p = new URLSearchParams();
+            if ($('fDe').value) p.set('de', $('fDe').value);
+            if ($('fAte').value) p.set('ate', $('fAte').value);
+            if ($('fStatus').value) p.set('status', $('fStatus').value);
+            Object.entries(extra || {}).forEach(([k, v]) => v && p.set(k, v));
+            return p.toString();
+        }
+
+        async function get(path, extra) {
+            const r = await fetch(API + path + '?' + qs(extra), { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' });
+            if (!r.ok) {
+                let msg = 'Erro ' + r.status;
+                try { const j = await r.json(); if (j.erro) msg = j.erro; } catch (e) { /* corpo não-JSON */ }
+                if (r.status === 403) msg = 'Você não tem permissão para ver o dashboard.';
+                if (r.status === 401) msg = 'Sessão expirada. Faça login novamente.';
+                throw new Error(msg);
+            }
+            return r.json();
+        }
+
+        function grafico(id, config) {
+            if (charts[id]) { charts[id].destroy(); }
+            charts[id] = new Chart($(id), config);
+        }
+
+        function renderResumo(r) {
+            $('kFat').textContent = brl(r.faturamento);
+            if (r.variacaoFaturamento == null) {
+                $('kVar').textContent = 'Sem período anterior p/ comparar';
+            } else {
+                const up = r.variacaoFaturamento >= 0;
+                $('kVar').textContent = (up ? '▲ ' : '▼ ') + Math.abs(r.variacaoFaturamento).toLocaleString('pt-BR') + '% vs período anterior';
+            }
+            $('kPed').textContent = r.pedidosValidos;
+            $('kPedSub').textContent = r.totalPedidos + ' no total';
+            $('kTicket').textContent = brl(r.ticketMedio);
+            $('kCli').textContent = r.clientesAtendidos + ' cliente(s) · desconto ' + brl(r.descontoTotal);
+            $('kAnd').textContent = r.pedidosEmAndamento;
+            $('kCanc').textContent = r.pedidosCancelados + ' cancelado(s) (' + r.taxaCancelamento.toLocaleString('pt-BR') + '%)';
+        }
+
+        function renderVendas(v) {
+            grafico('chVendas', { type: v.length > 31 ? 'line' : 'bar',
+                data: { labels: v.map(x => x.rotulo), datasets: [{ label: 'Faturamento (R$)', data: v.map(x => x.faturamento),
+                        backgroundColor: '#198754', borderColor: '#198754' }] },
+                options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } } });
+        }
+
+        function renderStatus(s) {
+            const total = s.reduce((a, x) => a + x.quantidade, 0);
+            grafico('chStatus', { type: 'doughnut',
+                data: { labels: s.map(x => NOMES[x.status] || x.status),
+                        datasets: [{ data: s.map(x => x.quantidade), backgroundColor: CORES }] },
+                options: { plugins: { legend: { position: 'bottom' },
+                    title: { display: total === 0, text: 'Sem pedidos no período' } } } });
+        }
+
+        function renderHora(h) {
+            grafico('chHora', { type: 'bar',
+                data: { labels: h.map(x => x.hora + 'h'), datasets: [{ label: 'Pedidos', data: h.map(x => x.pedidos), backgroundColor: '#0d6efd' }] },
+                options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } } });
+        }
+
+        function renderCategoria(c) {
+            grafico('chCat', { type: 'bar',
+                data: { labels: c.map(x => x.tipo), datasets: [{ label: 'Receita (R$)', data: c.map(x => x.receita), backgroundColor: '#fd7e14' }] },
+                options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } } });
+        }
+
+        function renderRanking(r) {
+            $('tbRank').innerHTML = r.length ? r.map((x, i) =>
+                '<tr><td>' + (i + 1) + '</td><td>' + esc(x.nome) + '</td><td>' + esc(x.tipo) +
+                '</td><td class="text-end">' + x.quantidade + '</td><td class="text-end">' + brl(x.receita) + '</td></tr>').join('')
+                : '<tr><td colspan="5" class="text-center text-muted">Sem vendas no período.</td></tr>';
+        }
+
+        function renderRecentes(r) {
+            $('tbRec').innerHTML = r.length ? r.map(x =>
+                '<tr><td>' + esc(x.cliente) + '</td><td><span class="badge text-bg-secondary">' + esc(NOMES[x.status] || x.status) +
+                '</span></td><td class="text-end">' + brl(x.valorTotal) + '</td><td>' +
+                new Date(x.dataHoraEntrada).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) + '</td></tr>').join('')
+                : '<tr><td colspan="4" class="text-center text-muted">Sem pedidos no período.</td></tr>';
+        }
+
+        async function carregar() {
+            if (carregando) return;
+            carregando = true;
+            $('dbStatus').textContent = 'Atualizando…';
+            $('dbErro').classList.add('d-none');
+            try {
+                const tipo = $('fTipo').value;
+                const [resumo, vendas, status, hora, cat, rank, rec] = await Promise.all([
+                    get('/resumo'),
+                    get('/vendas', { agrupamento: $('fAgrup').value }),
+                    get('/pedidos/por-status'),
+                    get('/vendas/por-hora'),
+                    get('/vendas/por-categoria'),
+                    get('/produtos/mais-vendidos', { tipo: tipo, limite: 8 }),
+                    get('/pedidos/recentes', { limite: 8 })
+                ]);
+                renderResumo(resumo); renderVendas(vendas); renderStatus(status);
+                renderHora(hora); renderCategoria(cat); renderRanking(rank); renderRecentes(rec);
+                $('dbStatus').textContent = 'Atualizado às ' + new Date().toLocaleTimeString('pt-BR');
+            } catch (e) {
+                $('dbErro').textContent = e.message || 'Não foi possível carregar o dashboard.';
+                $('dbErro').classList.remove('d-none');
+                $('dbStatus').textContent = 'Falha na atualização';
+            } finally {
+                carregando = false;
+            }
+        }
+
+        async function carregarFiltros() {
+            try {
+                const f = await get('/filtros');
+                f.status.forEach(s => $('fStatus').add(new Option(NOMES[s] || s, s)));
+                f.tipos.forEach(t => $('fTipo').add(new Option(t, t)));
+            } catch (e) { /* o painel principal exibe o erro */ }
+        }
+
+        function agendar() {
+            clearInterval(timer);
+            if ($('dbAuto').checked) timer = setInterval(carregar, 60000);
+        }
+
+        $('dbFiltros').addEventListener('submit', e => { e.preventDefault(); carregar(); });
+        $('fLimpar').addEventListener('click', () => {
+            periodoPadrao(); $('fStatus').value = ''; $('fTipo').value = ''; $('fAgrup').value = 'dia'; carregar();
+        });
+        $('dbAuto').addEventListener('change', agendar);
+
+        periodoPadrao();
+        carregarFiltros().then(carregar);
+        agendar();
+    })();
+    </script>
 </div>
 
 </body>

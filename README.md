@@ -117,7 +117,8 @@ A autorização é aplicada em dois níveis: por URL (`SecurityConfig`) e por m�
 
 | Rota                                  | Descrição                       |
 |---------------------------------------|---------------------------------|
-| `/login`, `/`                         | Login e página inicial          |
+| `/login`, `/`                         | Login e página inicial (→ dashboard) |
+| `/dashboard`                          | Dashboard administrativo (ADMIN/GERENTE) |
 | `/pedidos`, `/pedidos/novo`           | Listagem e criação de pedidos   |
 | `/clientes`, `/clientes/novo`         | Clientes                        |
 | `/produtos`                           | Catálogo                        |
@@ -134,6 +135,7 @@ A autorização é aplicada em dois níveis: por URL (`SecurityConfig`) e por m�
 | `PUT/DELETE /api/clientes/{id}`       | Atualiza / remove cliente       |
 | `PUT/DELETE /api/produtos/{id}`       | Atualiza / remove produto       |
 | `GET/PUT/DELETE /api/usuarios/{id}`   | Gerencia usuário (ADMIN)        |
+| `GET /api/dashboard/**`               | Indicadores do dashboard (ADMIN/GERENTE) — ver [docs/DASHBOARD.md](docs/DASHBOARD.md) |
 
 ### CSRF
 
@@ -176,3 +178,7 @@ após a saída, limite de 20%, cálculo do total) e o `DiffUtils` usado na audit
 ## Repositório
 
 https://github.com/VTNz19/PediuPatrao
+
+## Video sobre o Dashboard
+
+https://youtu.be/rOpSY-M0UkU
